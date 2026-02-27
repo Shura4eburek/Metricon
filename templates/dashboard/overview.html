@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Overview{% endblock %}
+{% block nav_overview %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <h4 class="mb-0 text-light">
+    <i class="bi bi-grid-1x2 me-2 text-info"></i>Bot Overview
+  </h4>
+  <span class="text-muted small">
+    <span class="text-success fw-bold">{{ online_count }}</span> /
+    <span class="text-light">{{ total_count }}</span> online
+    &nbsp;·&nbsp;
+    <span id="last-refresh" class="text-muted"></span>
+  </span>
+</div>
+
+{% if not bot_stats %}
+  <div class="card text-center py-5">
+    <div class="card-body">
+      <i class="bi bi-robot display-4 text-muted"></i>
+      <p class="mt-3 text-muted">No bots registered yet.</p>
+      <a href="/dashboard/api-keys/" class="btn btn-outline-info btn-sm">Register a bot</a>
+    </div>
+  </div>
+{% else %}
+  <div class="row g-3" id="bot-cards">
+    {% for s in bot_stats %}
+    <div class="col-12 col-md-6 col-xl-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <h5 class="card-title mb-0">
+              <a href="/dashboard/bots/{{ s.bot.id }}/" class="text-decoration-none text-light">
+                {{ s.bot.name }}
+              </a>
+            </h5>
+            {% if s.bot.is_online %}
+              <span class="badge badge-online">ONLINE</span>
+            {% else %}
+              <span class="badge badge-offline">OFFLINE</span>
+            {% endif %}
+          </div>
+
+          {% if s.bot.description %}
+            <p class="text-muted small mb-3">{{ s.bot.description }}</p>
+          {% endif %}
+
+          <div class="row text-center g-2 mb-3">
+            <div class="col-4">
+              <div class="rounded p-2" style="background:#1e2535">
+                <div class="fw-bold text-info">{{ s.req_per_hour }}</div>
+                <div class="text-muted" style="font-size:.7rem">req/hr</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="rounded p-2" style="background:#1e2535">
+                <div class="fw-bold text-warning">{{ s.avg_ms }}ms</div>
+                <div class="text-muted" style="font-size:.7rem">avg resp</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="rounded p-2" style="background:#1e2535">
+                <div class="fw-bold {% if s.errors_1h > 0 %}text-danger{% else %}text-success{% endif %}">
+                  {{ s.errors_1h }}
+                </div>
+                <div class="text-muted" style="font-size:.7rem">errors/hr</div>
+              </div>
+            </div>
+          </div>
+
+          {% if s.cpu_percent is not None %}
+          <div class="mb-1 d-flex justify-content-between" style="font-size:.75rem">
+            <span class="text-muted">CPU</span>
+            <span>{{ s.cpu_percent|floatformat:1 }}%</span>
+          </div>
+          <div class="progress cpu-bar mb-2" style="height:6px">
+            <div class="progress-bar bg-info" style="width:{{ s.cpu_percent }}%"></div>
+          </div>
+          {% endif %}
+        </div>
+        <div class="card-footer d-flex justify-content-between align-items-center"
+             style="background:transparent; border-color:#2a2d3a; font-size:.75rem">
+          <span class="text-muted">
+            {% if s.bot.last_seen_at %}
+              Last seen {{ s.bot.last_seen_at|timesince }} ago
+            {% else %}
+              Never seen
+            {% endif %}
+          </span>
+          <a href="/dashboard/bots/{{ s.bot.id }}/" class="btn btn-outline-secondary btn-sm py-0">
+            Detail <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Auto-refresh every 30 seconds
+  function updateRefreshTime() {
+    document.getElementById('last-refresh').textContent =
+      'Refreshed at ' + new Date().toLocaleTimeString();
+  }
+  updateRefreshTime();
+  setInterval(() => window.location.reload(), 30000);
+</script>
+{% endblock %}

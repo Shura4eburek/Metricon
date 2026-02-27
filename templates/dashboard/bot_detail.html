@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}{{ bot.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3 flex-wrap">
+  <a href="/dashboard/" class="text-muted text-decoration-none">
+    <i class="bi bi-arrow-left me-1"></i>Overview
+  </a>
+  <h4 class="mb-0 text-light">{{ bot.name }}</h4>
+  {% if bot.is_online %}
+    <span class="badge badge-online">ONLINE</span>
+  {% else %}
+    <span class="badge badge-offline">OFFLINE</span>
+  {% endif %}
+  {% if not bot.is_active %}
+    <span class="badge bg-secondary">INACTIVE</span>
+  {% endif %}
+
+  <!-- Window selector -->
+  <div class="ms-auto btn-group btn-group-sm" role="group" id="window-btns">
+    <button class="btn btn-outline-info active" data-window="1h">1h</button>
+    <button class="btn btn-outline-info" data-window="6h">6h</button>
+    <button class="btn btn-outline-info" data-window="24h">24h</button>
+    <button class="btn btn-outline-info" data-window="7d">7d</button>
+  </div>
+</div>
+
+<!-- Stat tiles -->
+<div class="row g-3 mb-4">
+  {% if last_hb %}
+  <div class="col-6 col-sm-4 col-lg-2">
+    <div class="card stat-tile">
+      <div class="value text-info">{{ last_hb.uptime_seconds|floatformat:0 }}s</div>
+      <div class="label">Uptime</div>
+    </div>
+  </div>
+  <div class="col-6 col-sm-4 col-lg-2">
+    <div class="card stat-tile">
+      <div class="value text-warning">{{ last_hb.cpu_percent|floatformat:1 }}%</div>
+      <div class="label">CPU</div>
+    </div>
+  </div>
+  <div class="col-6 col-sm-4 col-lg-2">
+    <div class="card stat-tile">
+      <div class="value text-primary">{{ last_hb.memory_mb|floatformat:0 }}<small class="fs-6">MB</small></div>
+      <div class="label">Memory</div>
+    </div>
+  </div>
+  <div class="col-6 col-sm-4 col-lg-2">
+    <div class="card stat-tile">
+      <div class="value text-success">{{ last_hb.active_connections }}</div>
+      <div class="label">Connections</div>
+    </div>
+  </div>
+  {% endif %}
+  <div class="col-6 col-sm-4 col-lg-2">
+    <div class="card stat-tile">
+      <div class="value text-light">{{ req_24h }}</div>
+      <div class="label">Req (24h)</div>
+    </div>
+  </div>
+  <div class="col-6 col-sm-4 col-lg-2">
+    <div class="card stat-tile">
+      <div class="value {% if errors_24h > 0 %}text-danger{% else %}text-success{% endif %}">
+        {{ errors_24h }}
+      </div>
+      <div class="label">Errors (24h)</div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts row 1 -->
+<div class="row g-3 mb-3">
+  <div class="col-12 col-lg-8">
+    <div class="card">
+      <div class="card-header text-muted small">Requests per bucket</div>
+      <div class="card-body">
+        <div class="chart-container">
+          <canvas id="chart-requests"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-4">
+    <div class="card">
+      <div class="card-header text-muted small">Top Commands (24h)</div>
+      <div class="card-body">
+        <div class="chart-container">
+          <canvas id="chart-commands"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts row 2 -->
+<div class="row g-3 mb-3">
+  <div class="col-12 col-lg-6">
+    <div class="card">
+      <div class="card-header text-muted small">Avg Response Time (ms)</div>
+      <div class="card-body">
+        <div class="chart-container">
+          <canvas id="chart-response-time"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-6">
+    <div class="card">
+      <div class="card-header text-muted small">CPU & Memory over time</div>
+      <div class="card-body">
+        <div class="chart-container">
+          <canvas id="chart-resources"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if custom_keys %}
+<!-- Custom metrics sparklines -->
+<div class="row g-3 mb-3">
+  {% for key in custom_keys %}
+  <div class="col-12 col-sm-6 col-lg-4">
+    <div class="card">
+      <div class="card-header text-muted small">{{ key }}</div>
+      <div class="card-body p-2">
+        <div class="sparkline-container">
+          <canvas id="sparkline-{{ key|slugify }}"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Error table -->
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span class="text-muted small">Recent Errors</span>
+    <span class="badge bg-danger">{{ errors_24h }} in 24h</span>
+  </div>
+  <div class="card-body p-0">
+    {% if recent_errors %}
+    <div class="table-responsive">
+      <table class="table table-dark table-hover mb-0" style="font-size:.82rem">
+        <thead>
+          <tr>
+            <th>Time</th><th>Type</th><th>Command</th><th>Message</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for err in recent_errors %}
+          <tr>
+            <td class="text-muted text-nowrap">{{ err.recorded_at|date:"M d H:i:s" }}</td>
+            <td><code class="text-danger">{{ err.error_type }}</code></td>
+            <td><code>{{ err.command|default:"-" }}</code></td>
+            <td>{{ err.message|truncatechars:80 }}</td>
+            <td>
+              {% if err.traceback %}
+              <button class="btn btn-outline-secondary btn-sm py-0"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#tb-{{ err.id }}">
+                TB
+              </button>
+              {% endif %}
+            </td>
+          </tr>
+          {% if err.traceback %}
+          <tr class="collapse" id="tb-{{ err.id }}">
+            <td colspan="5">
+              <pre class="traceback-pre text-warning">{{ err.traceback }}</pre>
+            </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-muted text-center py-3 mb-0">No errors recorded.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ custom_keys|list|json_script:"custom-keys-data" }}
+<script>
+const BOT_ID = {{ bot.id }};
+const CUSTOM_KEYS = JSON.parse(document.getElementById('custom-keys-data').textContent);
+</script>
+<script src="/static/js/charts.js"></script>
+{% endblock %}
