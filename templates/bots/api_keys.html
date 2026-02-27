@@ -112,7 +112,7 @@
       </div>
       <div class="modal-footer border-0">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button class="btn btn-info" onclick="registerBot()">Register</button>
+        <button class="btn btn-info" id="reg-submit-btn" onclick="registerBot()">Register</button>
       </div>
     </div>
   </div>
@@ -163,24 +163,50 @@ async function registerBot() {
   const desc = document.getElementById('reg-desc').value.trim();
   const errEl = document.getElementById('reg-error');
   const resEl = document.getElementById('reg-result');
+  const btn = document.getElementById('reg-submit-btn');
+
   errEl.classList.add('d-none');
   resEl.classList.add('d-none');
 
-  if (!name) { errEl.textContent = 'Name is required.'; errEl.classList.remove('d-none'); return; }
-
-  const res = await fetch('/api/v1/bots/register/', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
-    body: JSON.stringify({name, description: desc}),
-  });
-  const data = await res.json();
-  if (res.ok) {
-    document.getElementById('reg-key').textContent = data.api_key;
-    resEl.classList.remove('d-none');
-    setTimeout(() => location.reload(), 4000);
-  } else {
-    errEl.textContent = JSON.stringify(data);
+  if (!name) {
+    errEl.textContent = 'Name is required.';
     errEl.classList.remove('d-none');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Registering…';
+
+  try {
+    const res = await fetch('/api/v1/bots/register/', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name, description: desc}),
+    });
+
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      throw new Error('Server returned a non-JSON response (status ' + res.status + ')');
+    }
+
+    if (res.ok) {
+      document.getElementById('reg-key').textContent = data.api_key;
+      resEl.classList.remove('d-none');
+      setTimeout(() => location.reload(), 4000);
+    } else {
+      const msg = typeof data === 'object' ? Object.entries(data).map(([k, v]) => `${k}: ${v}`).join('; ') : JSON.stringify(data);
+      errEl.textContent = msg;
+      errEl.classList.remove('d-none');
+    }
+  } catch (err) {
+    errEl.textContent = 'Request failed: ' + err.message;
+    errEl.classList.remove('d-none');
+    console.error('[registerBot]', err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Register';
   }
 }
 

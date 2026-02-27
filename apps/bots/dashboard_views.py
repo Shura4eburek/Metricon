@@ -1,6 +1,8 @@
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 
 from .models import Bot
@@ -16,6 +18,7 @@ class APIKeysView(TemplateView):
         return ctx
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class BotRegenerateKeyView(View):
     """POST /dashboard/api-keys/<id>/regenerate/ — regenerate API key."""
 
@@ -25,6 +28,7 @@ class BotRegenerateKeyView(View):
         return JsonResponse({'api_key': bot.api_key})
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class BotToggleActiveView(View):
     """POST /dashboard/api-keys/<id>/toggle/ — activate/deactivate bot."""
 
