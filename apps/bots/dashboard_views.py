@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -15,7 +15,32 @@ class APIKeysView(TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['bots'] = Bot.objects.all().order_by('name')
+        # Pass newly registered bot key from session flash
+        ctx['new_bot_key'] = self.request.session.pop('new_bot_key', None)
+        ctx['new_bot_name'] = self.request.session.pop('new_bot_name', None)
+        ctx['reg_error'] = self.request.session.pop('reg_error', None)
         return ctx
+
+
+class BotRegisterFormView(View):
+    """POST /dashboard/api-keys/register/ — server-side bot registration."""
+
+    def post(self, request):
+        name = request.POST.get('name', '').strip()
+        description = request.POST.get('description', '').strip()
+
+        if not name:
+            request.session['reg_error'] = 'Name is required.'
+            return redirect('dashboard-api-keys')
+
+        if Bot.objects.filter(name=name).exists():
+            request.session['reg_error'] = f'A bot named "{name}" already exists.'
+            return redirect('dashboard-api-keys')
+
+        bot = Bot.objects.create(name=name, description=description)
+        request.session['new_bot_key'] = bot.api_key
+        request.session['new_bot_name'] = bot.name
+        return redirect('dashboard-api-keys')
 
 
 @method_decorator(csrf_exempt, name='dispatch')

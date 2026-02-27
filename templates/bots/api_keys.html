@@ -10,6 +10,22 @@
   </button>
 </div>
 
+{% if new_bot_key %}
+<div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+  <strong>Bot "{{ new_bot_name }}" registered!</strong>
+  Save this API key — it won't be shown in full again:<br>
+  <code class="fs-6 text-success">{{ new_bot_key }}</code>
+  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+{% if reg_error %}
+<div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+  {{ reg_error }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
 {% if bots %}
 <div class="card">
   <div class="table-responsive">
@@ -82,38 +98,33 @@
 </div>
 {% endif %}
 
-<!-- Register Modal -->
+<!-- Register Modal — plain HTML form, no JS fetch needed -->
 <div class="modal fade" id="registerModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content" style="background:#1a1f2e; border-color:#2a2d3a">
-      <div class="modal-header border-0">
-        <h5 class="modal-title text-light">Register New Bot</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <label class="form-label text-muted">Bot Name <span class="text-danger">*</span></label>
-          <input type="text" class="form-control bg-dark text-light border-secondary"
-                 id="reg-name" placeholder="my-trading-bot">
+      <form method="post" action="{% url 'bot-register-form' %}">
+        {% csrf_token %}
+        <div class="modal-header border-0">
+          <h5 class="modal-title text-light">Register New Bot</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="mb-3">
-          <label class="form-label text-muted">Description</label>
-          <input type="text" class="form-control bg-dark text-light border-secondary"
-                 id="reg-desc" placeholder="Optional description">
-        </div>
-        <div id="reg-result" class="d-none">
-          <div class="alert alert-success">
-            <strong>Bot registered!</strong><br>
-            Save your API key — it won't be shown again in full.<br>
-            <code id="reg-key" class="text-success"></code>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label text-muted">Bot Name <span class="text-danger">*</span></label>
+            <input type="text" name="name" class="form-control bg-dark text-light border-secondary"
+                   placeholder="my-trading-bot" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-muted">Description</label>
+            <input type="text" name="description" class="form-control bg-dark text-light border-secondary"
+                   placeholder="Optional description">
           </div>
         </div>
-        <div id="reg-error" class="alert alert-danger d-none"></div>
-      </div>
-      <div class="modal-footer border-0">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button class="btn btn-info" id="reg-submit-btn" onclick="registerBot()">Register</button>
-      </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-info">Register</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -138,82 +149,23 @@ function toggleKey(botId, fullKey) {
 }
 
 async function regenerateKey(botId) {
-  if (!confirm('Regenerate API key for this bot? The old key will stop working immediately.')) return;
-  const res = await fetch(`/dashboard/api-keys/${botId}/regenerate/`, {method: 'POST', headers: {'X-CSRFToken': getCookie('csrftoken')}});
-  if (res.ok) {
-    const data = await res.json();
-    const span = document.getElementById('key-' + botId);
-    span.textContent = data.api_key.slice(0, 8) + '•'.repeat(56);
-    keyVisible[botId] = false;
-    alert('Key regenerated: ' + data.api_key);
-  } else {
-    alert('Failed to regenerate key.');
-  }
+  if (!confirm('Regenerate API key? The old key will stop working immediately.')) return;
+  try {
+    const res = await fetch(`/dashboard/api-keys/${botId}/regenerate/`, {method: 'POST'});
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('key-' + botId).textContent = data.api_key.slice(0, 8) + '•'.repeat(56);
+      keyVisible[botId] = false;
+      alert('New key: ' + data.api_key);
+    }
+  } catch (e) { alert('Failed: ' + e.message); }
 }
 
 async function toggleActive(botId, btn) {
-  const res = await fetch(`/dashboard/api-keys/${botId}/toggle/`, {method: 'POST', headers: {'X-CSRFToken': getCookie('csrftoken')}});
-  if (res.ok) {
-    location.reload();
-  }
-}
-
-async function registerBot() {
-  const name = document.getElementById('reg-name').value.trim();
-  const desc = document.getElementById('reg-desc').value.trim();
-  const errEl = document.getElementById('reg-error');
-  const resEl = document.getElementById('reg-result');
-  const btn = document.getElementById('reg-submit-btn');
-
-  errEl.classList.add('d-none');
-  resEl.classList.add('d-none');
-
-  if (!name) {
-    errEl.textContent = 'Name is required.';
-    errEl.classList.remove('d-none');
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Registering…';
-
   try {
-    const res = await fetch('/api/v1/bots/register/', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({name, description: desc}),
-    });
-
-    let data;
-    try {
-      data = await res.json();
-    } catch {
-      throw new Error('Server returned a non-JSON response (status ' + res.status + ')');
-    }
-
-    if (res.ok) {
-      document.getElementById('reg-key').textContent = data.api_key;
-      resEl.classList.remove('d-none');
-      setTimeout(() => location.reload(), 4000);
-    } else {
-      const msg = typeof data === 'object' ? Object.entries(data).map(([k, v]) => `${k}: ${v}`).join('; ') : JSON.stringify(data);
-      errEl.textContent = msg;
-      errEl.classList.remove('d-none');
-    }
-  } catch (err) {
-    errEl.textContent = 'Request failed: ' + err.message;
-    errEl.classList.remove('d-none');
-    console.error('[registerBot]', err);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Register';
-  }
-}
-
-function getCookie(name) {
-  const val = `; ${document.cookie}`;
-  const parts = val.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
+    const res = await fetch(`/dashboard/api-keys/${botId}/toggle/`, {method: 'POST'});
+    if (res.ok) location.reload();
+  } catch (e) { alert('Failed: ' + e.message); }
 }
 </script>
 {% endblock %}
