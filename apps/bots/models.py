@@ -18,6 +18,7 @@ class Bot(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     last_seen_at = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    client_version = models.CharField(max_length=32, blank=True, default="")
 
     class Meta:
         ordering = ['name']
