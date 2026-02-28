@@ -62,3 +62,13 @@ class BotToggleActiveView(View):
         bot.is_active = not bot.is_active
         bot.save(update_fields=['is_active'])
         return JsonResponse({'is_active': bot.is_active})
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class BotDeleteView(View):
+    """POST /dashboard/api-keys/<id>/delete/ — permanently delete a bot."""
+
+    def post(self, request, bot_id):
+        bot = get_object_or_404(Bot, pk=bot_id)
+        bot.delete()
+        return JsonResponse({'deleted': True})

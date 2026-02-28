@@ -77,10 +77,15 @@
                     title="Regenerate API key">
               <i class="bi bi-arrow-clockwise"></i>
             </button>
-            <button class="btn btn-outline-{% if bot.is_active %}danger{% else %}success{% endif %} btn-sm py-0"
+            <button class="btn btn-outline-{% if bot.is_active %}danger{% else %}success{% endif %} btn-sm py-0 me-1"
                     onclick="toggleActive({{ bot.id }}, this)"
                     title="{% if bot.is_active %}Deactivate{% else %}Activate{% endif %}">
               <i class="bi bi-{% if bot.is_active %}pause-circle{% else %}play-circle{% endif %}"></i>
+            </button>
+            <button class="btn btn-outline-danger btn-sm py-0"
+                    onclick="deleteBot({{ bot.id }}, '{{ bot.name }}')"
+                    title="Delete bot">
+              <i class="bi bi-trash"></i>
             </button>
           </td>
         </tr>
@@ -165,6 +170,18 @@ async function toggleActive(botId, btn) {
   try {
     const res = await fetch(`/dashboard/api-keys/${botId}/toggle/`, {method: 'POST'});
     if (res.ok) location.reload();
+  } catch (e) { alert('Failed: ' + e.message); }
+}
+
+async function deleteBot(botId, botName) {
+  if (!confirm(`Delete bot "${botName}"? This will permanently remove all its metrics and data.`)) return;
+  try {
+    const res = await fetch(`/dashboard/api-keys/${botId}/delete/`, {method: 'POST'});
+    if (res.ok) {
+      document.getElementById('row-' + botId).remove();
+    } else {
+      alert('Failed to delete bot.');
+    }
   } catch (e) { alert('Failed: ' + e.message); }
 }
 </script>
