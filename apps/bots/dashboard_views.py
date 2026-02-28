@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
@@ -72,3 +73,24 @@ class BotDeleteView(View):
         bot = get_object_or_404(Bot, pk=bot_id)
         bot.delete()
         return JsonResponse({'deleted': True})
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class PushUpdateView(View):
+    """POST /dashboard/api-keys/push-update/ — mark latest client version."""
+
+    def post(self, request):
+        import re
+        from pathlib import Path
+        from apps.bots.models import ClientVersion
+
+        client_file = Path(settings.BASE_DIR) / "metricon_client.py"
+        try:
+            content = client_file.read_text(encoding="utf-8")
+            match = re.search(r'^VERSION\s*=\s*["\']([^"\']+)["\']', content, re.MULTILINE)
+            version = match.group(1) if match else "unknown"
+        except Exception:
+            version = "unknown"
+
+        ClientVersion.set_latest(version)
+        return JsonResponse({"pushed": True, "version": version})

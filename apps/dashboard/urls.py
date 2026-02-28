@@ -7,6 +7,7 @@ from apps.bots.dashboard_views import (
     BotRegenerateKeyView,
     BotRegisterFormView,
     BotToggleActiveView,
+    PushUpdateView,
 )
 
 from .views import BotDetailView, OverviewView
@@ -16,6 +17,7 @@ urlpatterns = [
     path('bots/<int:bot_id>/', BotDetailView.as_view(), name='dashboard-bot-detail'),
     path('api-keys/', APIKeysView.as_view(), name='dashboard-api-keys'),
     path('api-keys/register/', BotRegisterFormView.as_view(), name='bot-register-form'),
+    path('api-keys/push-update/', PushUpdateView.as_view(), name='push-update'),
     path('api-keys/<int:bot_id>/regenerate/', BotRegenerateKeyView.as_view(), name='bot-regenerate-key'),
     path('api-keys/<int:bot_id>/toggle/', BotToggleActiveView.as_view(), name='bot-toggle-active'),
     path('api-keys/<int:bot_id>/delete/', BotDeleteView.as_view(), name='bot-delete'),

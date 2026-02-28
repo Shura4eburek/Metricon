@@ -5,9 +5,14 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h4 class="mb-0 text-light"><i class="bi bi-key me-2 text-info"></i>Bot API Keys</h4>
-  <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">
-    <i class="bi bi-plus-lg me-1"></i>Register New Bot
-  </button>
+  <div class="d-flex gap-2">
+    <button class="btn btn-outline-success btn-sm" onclick="pushUpdate()" title="Push latest client to all bots">
+      <i class="bi bi-cloud-upload me-1"></i>Push Update
+    </button>
+    <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">
+      <i class="bi bi-plus-lg me-1"></i>Register New Bot
+    </button>
+  </div>
 </div>
 
 {% if new_bot_key %}
@@ -181,6 +186,19 @@ async function deleteBot(botId, botName) {
       document.getElementById('row-' + botId).remove();
     } else {
       alert('Failed to delete bot.');
+    }
+  } catch (e) { alert('Failed: ' + e.message); }
+}
+
+async function pushUpdate() {
+  if (!confirm('Push latest client version to all bots? They will auto-update on next heartbeat.')) return;
+  try {
+    const res = await fetch('/dashboard/api-keys/push-update/', {method: 'POST'});
+    if (res.ok) {
+      const data = await res.json();
+      alert(`Update pushed! Bots will receive version ${data.version} on next heartbeat.`);
+    } else {
+      alert('Failed to push update.');
     }
   } catch (e) { alert('Failed: ' + e.message); }
 }
