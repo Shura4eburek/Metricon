@@ -30,6 +30,8 @@ Usage:
 
     client.stop()
 """
+VERSION = "1.1.0"
+
 from __future__ import annotations
 
 import asyncio
@@ -308,6 +310,7 @@ class MetriconClient:
             "cpu_percent": round(cpu, 2),
             "memory_mb": round(memory_mb, 2),
             "active_connections": connections,
+            "client_version": VERSION,
         }
         self._post("/api/v1/bots/heartbeat/", payload)
 
