@@ -5,21 +5,21 @@
 {% block content %}
 <div class="d-flex align-items-center justify-content-between mb-4">
   <h4 class="mb-0 text-light">
-    <i class="bi bi-grid-1x2 me-2 text-info"></i>Bot Overview
+    <i class="bi bi-grid-1x2 me-2 text-info"></i><span data-i18n="overview.title">Bot Overview</span>
   </h4>
   <div class="d-flex align-items-center gap-3">
     <span class="text-muted small">
       <span class="text-success fw-bold">{{ online_count }}</span> /
-      <span class="text-light">{{ total_count }}</span> online
+      <span class="text-light">{{ total_count }}</span> <span data-i18n="overview.online_of">online</span>
       &nbsp;·&nbsp;
       <span id="last-refresh" class="text-muted"></span>
     </span>
     {% if bot_stats %}
     <div class="btn-group btn-group-sm" role="group">
-      <button id="btn-grid" type="button" class="btn btn-outline-secondary" onclick="setView('grid')" title="Grid view">
+      <button id="btn-grid" type="button" class="btn btn-outline-secondary" onclick="setView('grid')" data-i18n-title="overview.grid_title" title="Grid view">
         <i class="bi bi-grid-3x2-gap"></i>
       </button>
-      <button id="btn-list" type="button" class="btn btn-outline-secondary" onclick="setView('list')" title="List view">
+      <button id="btn-list" type="button" class="btn btn-outline-secondary" onclick="setView('list')" data-i18n-title="overview.list_title" title="List view">
         <i class="bi bi-list-ul"></i>
       </button>
     </div>
@@ -31,8 +31,8 @@
   <div class="card text-center py-5">
     <div class="card-body">
       <i class="bi bi-robot display-4 text-muted"></i>
-      <p class="mt-3 text-muted">No bots registered yet.</p>
-      <a href="/dashboard/api-keys/" class="btn btn-outline-info btn-sm">Register a bot</a>
+      <p class="mt-3 text-muted" data-i18n="overview.no_bots">No bots registered yet.</p>
+      <a href="/dashboard/api-keys/" class="btn btn-outline-info btn-sm" data-i18n="overview.register_btn">Register a bot</a>
     </div>
   </div>
 {% else %}
@@ -97,16 +97,16 @@
              style="background:transparent; border-color:#2a2d3a; font-size:.75rem">
           <span class="text-muted">
             {% if s.bot.last_seen_at %}
-              Last seen {{ s.bot.last_seen_at|timesince }} ago
+              <span data-i18n="overview.last_seen">Last seen</span> {{ s.bot.last_seen_at|timesince }} <span data-i18n="overview.ago">ago</span>
             {% else %}
-              Never seen
+              <span data-i18n="overview.never_seen">Never seen</span>
             {% endif %}
           </span>
           <div class="d-flex align-items-center gap-2">
             {% if s.client_version %}
               <span class="text-muted">v{{ s.client_version }}</span>
               {% if s.needs_update %}
-                <span class="badge bg-warning text-dark" style="font-size:.65rem">Update needed</span>
+                <span class="badge bg-warning text-dark" style="font-size:.65rem" data-i18n="overview.update_badge">Update needed</span>
               {% endif %}
             {% endif %}
             <a href="/dashboard/bots/{{ s.bot.id }}/" class="btn btn-outline-secondary btn-sm py-0">
@@ -125,15 +125,15 @@
       <thead>
         <tr style="color:#8b949e; font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid #2a2d3a">
           <th class="ps-3" style="width:1.2rem"></th>
-          <th>Name</th>
-          <th>Version</th>
-          <th style="width:9rem">CPU</th>
-          <th class="text-end" style="width:5rem">RAM</th>
-          <th class="text-end" style="width:5rem">Uptime</th>
-          <th class="text-end" style="width:4.5rem">req/hr</th>
-          <th class="text-end" style="width:4.5rem">avg ms</th>
-          <th class="text-end" style="width:4rem">errors</th>
-          <th style="width:6rem">Last seen</th>
+          <th data-i18n="col.name">Name</th>
+          <th data-i18n="col.version">Version</th>
+          <th style="width:9rem" data-i18n="col.cpu">CPU</th>
+          <th class="text-end" style="width:5rem" data-i18n="col.ram">RAM</th>
+          <th class="text-end" style="width:5rem" data-i18n="col.uptime">Uptime</th>
+          <th class="text-end" style="width:4.5rem" data-i18n="col.req_hr">req/hr</th>
+          <th class="text-end" style="width:4.5rem" data-i18n="col.avg_ms">avg ms</th>
+          <th class="text-end" style="width:4rem" data-i18n="col.errors">errors</th>
+          <th style="width:6rem" data-i18n="col.last_seen">Last seen</th>
           <th style="width:6rem; border-left:1px solid #2a2d3a"></th>
         </tr>
       </thead>
@@ -159,7 +159,7 @@
             {% if s.client_version %}
               <span class="text-muted" style="font-family:monospace">v{{ s.client_version }}</span>
               {% if s.needs_update %}
-                <span class="badge bg-warning text-dark d-block mt-1" style="font-size:.6rem; width:fit-content">⚠ Update</span>
+                <span class="badge bg-warning text-dark d-block mt-1" style="font-size:.6rem; width:fit-content" data-i18n="overview.update_badge">Update needed</span>
               {% endif %}
             {% else %}
               <span class="text-muted">—</span>
@@ -203,7 +203,7 @@
             {{ s.errors_1h }}
           </td>
           <td class="py-2 text-muted" style="font-size:.75rem">
-            {% if s.bot.last_seen_at %}{{ s.bot.last_seen_at|timesince }} ago{% else %}Never{% endif %}
+            {% if s.bot.last_seen_at %}{{ s.bot.last_seen_at|timesince }} <span data-i18n="overview.ago">ago</span>{% else %}<span data-i18n="overview.never">Never</span>{% endif %}
           </td>
           <td class="py-2 text-end" style="border-left:1px solid #2a2d3a">
             <a href="/dashboard/bots/{{ s.bot.id }}/" class="btn btn-sm btn-primary px-3">
@@ -223,7 +223,7 @@
 <script>
   function updateRefreshTime() {
     document.getElementById('last-refresh').textContent =
-      'Refreshed at ' + new Date().toLocaleTimeString();
+      I18N.t('overview.refreshed_at') + ' ' + new Date().toLocaleTimeString();
   }
   updateRefreshTime();
   setInterval(() => window.location.reload(), 30000);
@@ -250,10 +250,10 @@
     const d = Math.floor(s / 86400);
     const h = Math.floor((s % 86400) / 3600);
     const m = Math.floor((s % 3600) / 60);
-    if (d > 0) return d + 'д ' + h + 'ч';
-    if (h > 0) return h + 'ч ' + m + 'м';
-    if (m > 0) return m + 'м';
-    return '< 1м';
+    if (d > 0) return d + I18N.t('uptime.d') + ' ' + h + I18N.t('uptime.h');
+    if (h > 0) return h + I18N.t('uptime.h') + ' ' + m + I18N.t('uptime.m');
+    if (m > 0) return m + I18N.t('uptime.m');
+    return I18N.t('uptime.less1m');
   }
 
   // Format all uptime cells on load
