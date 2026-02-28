@@ -75,7 +75,7 @@ class BotDetailView(TemplateView):
         ctx['errors_24h'] = errors_24h
         ctx['last_hb'] = last_hb
         ctx['recent_errors'] = ErrorEvent.objects.filter(bot=bot).order_by('-recorded_at')[:20]
-        ctx['custom_keys'] = (
+        ctx['custom_keys'] = list(
             bot.custom_metrics.values_list('key', flat=True).distinct().order_by('key')
         )
         return ctx

@@ -186,7 +186,7 @@
 {% endblock %}
 
 {% block extra_js %}
-{{ custom_keys|list|json_script:"custom-keys-data" }}
+{{ custom_keys|json_script:"custom-keys-data" }}
 <script>
 const BOT_ID = {{ bot.id }};
 const CUSTOM_KEYS = JSON.parse(document.getElementById('custom-keys-data').textContent);
