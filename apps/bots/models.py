@@ -4,6 +4,8 @@ from datetime import timedelta
 from django.db import models
 from django.utils import timezone
 
+VERSION_DEFAULT = "1.0.0"
+
 
 def generate_api_key():
     return secrets.token_hex(32)
@@ -50,3 +52,21 @@ class Heartbeat(models.Model):
 
     def __str__(self):
         return f"{self.bot.name} @ {self.recorded_at}"
+
+
+class ClientVersion(models.Model):
+    """Singleton: stores the latest approved client version."""
+    version = models.CharField(max_length=32)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Client Version"
+
+    @classmethod
+    def get_latest(cls) -> str:
+        obj, _ = cls.objects.get_or_create(pk=1, defaults={"version": VERSION_DEFAULT})
+        return obj.version
+
+    @classmethod
+    def set_latest(cls, version: str) -> None:
+        cls.objects.update_or_create(pk=1, defaults={"version": version})
