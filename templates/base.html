@@ -31,6 +31,7 @@
     a:hover { color: #acd4ff; }
   </style>
 
+  <script src="/static/js/i18n.js"></script>
   {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -40,13 +41,18 @@
     <a class="navbar-brand text-info" href="/dashboard/">
       <i class="bi bi-graph-up-arrow me-2"></i>Metricon
     </a>
-    <div class="navbar-nav ms-auto">
+    <div class="navbar-nav ms-auto d-flex align-items-center gap-2">
       <a class="nav-link {% block nav_overview %}{% endblock %}" href="/dashboard/">
-        <i class="bi bi-grid-1x2 me-1"></i>Overview
+        <i class="bi bi-grid-1x2 me-1"></i><span data-i18n="nav.overview">Overview</span>
       </a>
       <a class="nav-link {% block nav_apikeys %}{% endblock %}" href="/dashboard/api-keys/">
-        <i class="bi bi-key me-1"></i>API Keys
+        <i class="bi bi-key me-1"></i><span data-i18n="nav.api_keys">API Keys</span>
       </a>
+      <div class="d-flex gap-1 ms-3">
+        <button class="lang-btn btn btn-sm btn-outline-secondary px-2 py-0" data-lang="en" onclick="I18N.applyLang('en')" title="English">🇬🇧</button>
+        <button class="lang-btn btn btn-sm btn-outline-secondary px-2 py-0" data-lang="ru" onclick="I18N.applyLang('ru')" title="Русский">🇷🇺</button>
+        <button class="lang-btn btn btn-sm btn-outline-secondary px-2 py-0" data-lang="ua" onclick="I18N.applyLang('ua')" title="Українська">🇺🇦</button>
+      </div>
     </div>
   </div>
 </nav>
@@ -62,6 +68,7 @@
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
+<script>I18N.applyLang(I18N.currentLang());</script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>
