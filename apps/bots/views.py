@@ -57,5 +57,5 @@ class ClientLatestView(APIView):
         try:
             content = file_path.read_text(encoding="utf-8")
         except FileNotFoundError:
-            return Response({"detail": "Client file not found."}, status=404)
+            return HttpResponse("Client file not found.", status=404, content_type="text/plain; charset=utf-8")
         return HttpResponse(content, content_type="text/plain; charset=utf-8")
