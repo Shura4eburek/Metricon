@@ -43,6 +43,7 @@ class OverviewView(TemplateView):
                 'errors_1h': errors_1h,
                 'cpu_percent': last_hb.cpu_percent if last_hb else None,
                 'memory_mb': last_hb.memory_mb if last_hb else None,
+                'uptime_seconds': last_hb.uptime_seconds if last_hb else None,
                 'client_version': bot.client_version,
                 'needs_update': bool(bot.client_version and bot.client_version != latest_version),
             })
