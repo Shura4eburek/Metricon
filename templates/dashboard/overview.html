@@ -121,54 +121,92 @@
 
   {# ── List view ── #}
   <div id="bot-list" style="display:none">
-    <table class="table table-dark table-hover align-middle mb-0" style="font-size:.85rem">
-      <thead style="color:#8b949e; font-size:.75rem; text-transform:uppercase; letter-spacing:.05em">
-        <tr>
-          <th style="width:1rem"></th>
+    <table class="table table-dark table-hover align-middle mb-0" style="font-size:.82rem; border-collapse:separate; border-spacing:0">
+      <thead>
+        <tr style="color:#8b949e; font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid #2a2d3a">
+          <th class="ps-3" style="width:1.2rem"></th>
           <th>Name</th>
           <th>Version</th>
-          <th class="text-end">req/hr</th>
-          <th class="text-end">avg ms</th>
-          <th class="text-end">errors</th>
-          <th>Last seen</th>
-          <th></th>
+          <th style="width:9rem">CPU</th>
+          <th class="text-end" style="width:5rem">RAM</th>
+          <th class="text-end" style="width:5rem">Uptime</th>
+          <th class="text-end" style="width:4.5rem">req/hr</th>
+          <th class="text-end" style="width:4.5rem">avg ms</th>
+          <th class="text-end" style="width:4rem">errors</th>
+          <th style="width:6rem">Last seen</th>
+          <th style="width:6rem; border-left:1px solid #2a2d3a"></th>
         </tr>
       </thead>
       <tbody>
         {% for s in bot_stats %}
-        <tr>
-          <td>
+        <tr style="border-bottom:1px solid #1e2230">
+          <td class="ps-3">
             {% if s.bot.is_online %}
-              <span class="badge badge-online">●</span>
+              <span style="color:#2ea043; font-size:.65rem">●</span>
             {% else %}
-              <span class="badge badge-offline">●</span>
+              <span style="color:#6e7681; font-size:.65rem">●</span>
             {% endif %}
           </td>
-          <td>
+          <td class="py-2">
             <a href="/dashboard/bots/{{ s.bot.id }}/" class="text-decoration-none text-light fw-semibold">
               {{ s.bot.name }}
             </a>
+            {% if s.bot.description %}
+              <div class="text-muted" style="font-size:.7rem; line-height:1.2">{{ s.bot.description|truncatechars:40 }}</div>
+            {% endif %}
           </td>
-          <td>
+          <td class="py-2">
             {% if s.client_version %}
-              <span class="text-muted">v{{ s.client_version }}</span>
+              <span class="text-muted" style="font-family:monospace">v{{ s.client_version }}</span>
               {% if s.needs_update %}
-                <span class="badge bg-warning text-dark ms-1" style="font-size:.65rem">Update needed</span>
+                <span class="badge bg-warning text-dark d-block mt-1" style="font-size:.6rem; width:fit-content">⚠ Update</span>
               {% endif %}
             {% else %}
               <span class="text-muted">—</span>
             {% endif %}
           </td>
-          <td class="text-end text-info">{{ s.req_per_hour }}</td>
-          <td class="text-end text-warning">{{ s.avg_ms }}ms</td>
-          <td class="text-end {% if s.errors_1h > 0 %}text-danger{% else %}text-success{% endif %}">
+          <td class="py-2">
+            {% if s.cpu_percent is not None %}
+              {% if s.cpu_percent >= 80 %}
+                <div class="fw-semibold text-danger" style="font-family:monospace; font-size:.8rem">{{ s.cpu_percent|floatformat:1 }}%</div>
+                <div class="progress mt-1" style="height:3px; background:#1e2230">
+                  <div class="progress-bar bg-danger" style="width:{{ s.cpu_percent }}%"></div>
+                </div>
+              {% elif s.cpu_percent >= 50 %}
+                <div class="fw-semibold text-warning" style="font-family:monospace; font-size:.8rem">{{ s.cpu_percent|floatformat:1 }}%</div>
+                <div class="progress mt-1" style="height:3px; background:#1e2230">
+                  <div class="progress-bar bg-warning" style="width:{{ s.cpu_percent }}%"></div>
+                </div>
+              {% else %}
+                <div class="fw-semibold text-success" style="font-family:monospace; font-size:.8rem">{{ s.cpu_percent|floatformat:1 }}%</div>
+                <div class="progress mt-1" style="height:3px; background:#1e2230">
+                  <div class="progress-bar bg-success" style="width:{{ s.cpu_percent }}%"></div>
+                </div>
+              {% endif %}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td class="text-end py-2" style="font-family:monospace; color:#8b949e">
+            {% if s.memory_mb is not None %}
+              {{ s.memory_mb|floatformat:0 }}<span style="font-size:.7rem; color:#6e7681"> MB</span>
+            {% else %}—{% endif %}
+          </td>
+          <td class="text-end py-2" style="font-family:monospace; color:#8b949e">
+            {% if s.uptime_seconds is not None %}
+              <span class="uptime-fmt" data-seconds="{{ s.uptime_seconds }}">{{ s.uptime_seconds }}s</span>
+            {% else %}—{% endif %}
+          </td>
+          <td class="text-end py-2 text-info" style="font-family:monospace">{{ s.req_per_hour }}</td>
+          <td class="text-end py-2 text-warning" style="font-family:monospace">{{ s.avg_ms }}ms</td>
+          <td class="text-end py-2 {% if s.errors_1h > 0 %}text-danger{% else %}text-success{% endif %}" style="font-family:monospace">
             {{ s.errors_1h }}
           </td>
-          <td class="text-muted">
+          <td class="py-2 text-muted" style="font-size:.75rem">
             {% if s.bot.last_seen_at %}{{ s.bot.last_seen_at|timesince }} ago{% else %}Never{% endif %}
           </td>
-          <td>
-            <a href="/dashboard/bots/{{ s.bot.id }}/" class="btn btn-outline-secondary btn-sm py-0">
+          <td class="py-2 text-end" style="border-left:1px solid #2a2d3a">
+            <a href="/dashboard/bots/{{ s.bot.id }}/" class="btn btn-sm btn-primary px-3">
               Detail <i class="bi bi-arrow-right"></i>
             </a>
           </td>
@@ -206,6 +244,22 @@
 
     localStorage.setItem('metricon_view', v);
   }
+
+  function fmtUptime(s) {
+    if (s == null) return '—';
+    const d = Math.floor(s / 86400);
+    const h = Math.floor((s % 86400) / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    if (d > 0) return d + 'д ' + h + 'ч';
+    if (h > 0) return h + 'ч ' + m + 'м';
+    if (m > 0) return m + 'м';
+    return '< 1м';
+  }
+
+  // Format all uptime cells on load
+  document.querySelectorAll('.uptime-fmt').forEach(el => {
+    el.textContent = fmtUptime(parseInt(el.dataset.seconds, 10));
+  });
 
   // Restore saved preference on load
   const savedView = localStorage.getItem('metricon_view') || 'grid';
