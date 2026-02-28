@@ -30,7 +30,7 @@
   {% if last_hb %}
   <div class="col-6 col-sm-4 col-lg-2">
     <div class="card stat-tile">
-      <div class="value text-info">{{ last_hb.uptime_seconds|floatformat:0 }}s</div>
+      <div class="value text-info" id="uptime-value" data-seconds="{{ last_hb.uptime_seconds }}">{{ last_hb.uptime_seconds|floatformat:0 }}s</div>
       <div class="label">Uptime</div>
     </div>
   </div>
@@ -190,6 +190,22 @@
 <script>
 const BOT_ID = {{ bot.id }};
 const CUSTOM_KEYS = JSON.parse(document.getElementById('custom-keys-data').textContent);
+
+(function () {
+  const el = document.getElementById('uptime-value');
+  if (!el) return;
+  const s = parseInt(el.dataset.seconds, 10);
+  if (isNaN(s)) return;
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  let fmt;
+  if (d > 0)      fmt = d + 'д ' + h + 'ч';
+  else if (h > 0) fmt = h + 'ч ' + m + 'м';
+  else if (m > 0) fmt = m + 'м';
+  else            fmt = '< 1м';
+  el.textContent = fmt;
+})();
 </script>
 <script src="/static/js/charts.js"></script>
 {% endblock %}
