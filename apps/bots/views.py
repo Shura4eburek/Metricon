@@ -1,3 +1,7 @@
+from pathlib import Path
+
+from django.conf import settings
+from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
@@ -43,3 +47,15 @@ class HeartbeatView(APIView):
             needs_update = bool(client_version and client_version != latest)
             return Response({'status': 'ok', 'update': needs_update}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ClientLatestView(APIView):
+    """GET /api/v1/client/latest/ — serve current metricon_client.py."""
+
+    def get(self, request):
+        file_path = Path(settings.BASE_DIR) / "metricon_client.py"
+        try:
+            content = file_path.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return Response({"detail": "Client file not found."}, status=404)
+        return HttpResponse(content, content_type="text/plain; charset=utf-8")
