@@ -41,7 +41,11 @@ class HeartbeatView(APIView):
             client_version = data.pop('client_version', None)
             Heartbeat.objects.create(bot=bot, **data)
             bot.last_seen_at = timezone.now()
-            bot.save(update_fields=['last_seen_at'])
+            update_fields = ['last_seen_at']
+            if client_version:
+                bot.client_version = client_version
+                update_fields.append('client_version')
+            bot.save(update_fields=update_fields)
 
             latest = ClientVersion.get_latest()
             needs_update = bool(client_version and client_version != latest)
