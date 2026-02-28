@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .authentication import APIKeyAuthentication
-from .models import Bot, Heartbeat
+from .models import Bot, Heartbeat, ClientVersion
 from .serializers import BotRegisterSerializer, HeartbeatSerializer
 
 
@@ -33,8 +33,13 @@ class HeartbeatView(APIView):
         bot = request.user
         serializer = HeartbeatSerializer(data=request.data)
         if serializer.is_valid():
-            Heartbeat.objects.create(bot=bot, **serializer.validated_data)
+            data = serializer.validated_data
+            client_version = data.pop('client_version', None)
+            Heartbeat.objects.create(bot=bot, **data)
             bot.last_seen_at = timezone.now()
             bot.save(update_fields=['last_seen_at'])
-            return Response({'status': 'ok'}, status=status.HTTP_200_OK)
+
+            latest = ClientVersion.get_latest()
+            needs_update = bool(client_version and client_version != latest)
+            return Response({'status': 'ok', 'update': needs_update}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -11,9 +11,11 @@ class BotRegisterSerializer(serializers.ModelSerializer):
 
 
 class HeartbeatSerializer(serializers.ModelSerializer):
+    client_version = serializers.CharField(required=False, allow_blank=True, write_only=True)
+
     class Meta:
         model = Heartbeat
-        fields = ['uptime_seconds', 'cpu_percent', 'memory_mb', 'active_connections']
+        fields = ['uptime_seconds', 'cpu_percent', 'memory_mb', 'active_connections', 'client_version']
 
 
 class BotStatusSerializer(serializers.ModelSerializer):
