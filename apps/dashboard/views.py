@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views.generic import TemplateView
 
-from apps.bots.models import Bot
+from apps.bots.models import Bot, ClientVersion
 from apps.metrics.models import ErrorEvent, RequestLog
 
 
@@ -20,6 +20,7 @@ class OverviewView(TemplateView):
         ctx = super().get_context_data(**kwargs)
         now = timezone.now()
         one_hour_ago = now - timedelta(hours=1)
+        latest_version = ClientVersion.get_latest()
 
         bots = Bot.objects.all()
         bot_stats = []
@@ -42,6 +43,8 @@ class OverviewView(TemplateView):
                 'errors_1h': errors_1h,
                 'cpu_percent': last_hb.cpu_percent if last_hb else None,
                 'memory_mb': last_hb.memory_mb if last_hb else None,
+                'client_version': bot.client_version,
+                'needs_update': bool(bot.client_version and bot.client_version != latest_version),
             })
 
         ctx['bot_stats'] = bot_stats
